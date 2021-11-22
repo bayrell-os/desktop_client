@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys
+import sys, os, json
 from os.path import abspath, dirname, join
 from .MainWindow import Ui_MainWindow
 from .ConnectionDialog import Ui_ConnectionDialog
@@ -44,16 +44,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		
 		# Set a title
 		self.setupUi(self)
-		self.setWindowTitle("BAYRELL OS Thin Desktop Client")
+		self.setWindowTitle("BAYRELL OS Desktop Client")
 		
 		# Set to center
 		self.set_window_center()
 		
-		#self.show_connection_dialog()
+		# Load items
+		self.loadItems()
 		
 		# Add action
 		self.addButton.clicked.connect(self.onAddClick)
 		self.editButton.clicked.connect(self.onEditClick)
+		self.deleteButton.clicked.connect(self.onDeleteClick)
 		
 		pass
 	
@@ -107,11 +109,75 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		
 		self.move ( x, y );
 		
+		
+	def getConnectionsFileName(self):
+		path = os.path.expanduser('~')
+		path = os.path.join(path, ".config", "bayrell_os")
+		os.makedirs(path, exist_ok=True)
+		file_name = os.path.join(path, "connections.json")
+		return file_name
+	
+	
+	def loadItems(self):
+		
+		file_name = self.getConnectionsFileName()
+		file_content = ""
+		
+		try:
+			if os.path.exists(file_name):
+				with open(file_name) as file:
+					file_content = file.read()
+					file.close()
+				
+				objects = json.loads(file_content)
+				for obj in objects:
+					
+					data = Connection()
+					data.connection_name = obj["connection_name"]
+					data.host = obj["host"]
+					data.port = obj["port"]
+					data.username = obj["username"]
+					data.password = obj["password"]
+					
+					item = QListWidgetItem(data.connection_name)
+					item.setData(1, data)
+					self.listWidget.addItem(item)
+				
+		finally:
+			pass
+		
+		pass
+	
+	def saveItems(self):
+		
+		objects = []
+		for row in range(self.listWidget.count()):
+			item = self.listWidget.item(row)
+			
+			data = item.data(1)
+			obj = {
+				"connection_name": data.connection_name,
+				"host": data.host,
+				"port": data.port,
+				"username": data.username,
+				"password": data.password,
+			}
+			
+			objects.append(obj)
+		
+		text = json.dumps(objects, indent=2) 
+		
+		file_name = self.getConnectionsFileName()
+		with open(file_name, "w") as file:
+			file.write(text)
+			file.close()
+			
+		pass
 	
 	
 	def onAddClick(self):
 		self.show_connection_dialog()
-		pass
+		self.saveItems()
 	
 	
 	def onEditClick(self):
@@ -120,8 +186,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		if len(items) > 0:
 			self.show_connection_dialog( self.listWidget.item(items[0].row()) )
 			
-		pass
+		self.saveItems()
 	
+	
+	def onDeleteClick(self):
+		items = self.listWidget.selectedIndexes()
+		for item in items:
+			row = item.row()
+			self.listWidget.takeItem(row)
+		
+		self.saveItems()
 	
 	
 def run():
