@@ -38,7 +38,7 @@ setup(
 	],
 	install_requires=[
 		'PyQt5',
-		'python-xlib',
+		'PyQtWebEngine',
 	],
 	classifiers=[
 		'Development Status :: 3 - Alpha',
