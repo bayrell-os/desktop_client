@@ -2,5 +2,5 @@
 # -*- coding: utf-8 -*-
 
 
-import bayrell_os_thin_desktop_client.app
-bayrell_os_thin_desktop_client.app.run()
+import bayrell_os_desktop_client.app
+bayrell_os_desktop_client.app.run()

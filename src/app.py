@@ -4,14 +4,15 @@ import sys, os, json
 from os.path import abspath, dirname, join
 from .MainWindow import Ui_MainWindow
 from .ConnectionDialog import Ui_ConnectionDialog
+from .WebBrowser import Ui_WebBrowser
 
 import PyQt5
 from PyQt5.QtWidgets import \
 	QApplication, QMainWindow, QSystemTrayIcon, QMenu, \
 	QAction, QWidget, QStyle, QDialog, QMessageBox, QListWidgetItem
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSize
-
+from PyQt5.QtCore import QSize, QUrl
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 main_window = None
 
@@ -26,13 +27,24 @@ class Connection():
 		self.password = "";
 
 
+
 class ConnectionDialog(QDialog, Ui_ConnectionDialog):
 	
 	def __init__(self):
 		QDialog.__init__(self)
 		self.setupUi(self)
 		self.setWindowTitle("Connection")
-		self.type = "add"
+
+
+
+class WebBrowser(QMainWindow, Ui_WebBrowser):
+	
+	def __init__(self, parent=None):
+		QMainWindow.__init__(self, parent)
+		self.setupUi(self)
+		self.setWindowTitle("WebBrowser")
+		browser:QWebEngineView = self.browser
+		browser.setUrl( QUrl("https://google.com") )
 
 
 
@@ -56,6 +68,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.addButton.clicked.connect(self.onAddClick)
 		self.editButton.clicked.connect(self.onEditClick)
 		self.deleteButton.clicked.connect(self.onDeleteClick)
+		self.connectButton.clicked.connect(self.onConnectClick)
 		
 		pass
 	
@@ -196,6 +209,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			self.listWidget.takeItem(row)
 		
 		self.saveItems()
+	
+	
+	def onConnectClick(self):
+		web_browser = WebBrowser(self)
+		web_browser.show()
+		
+		pass
 	
 	
 def run():

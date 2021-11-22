@@ -4,3 +4,6 @@
 
 from src.app import run
 run()
+
+#import sip
+#print(sip.SIP_VERSION_STR)
