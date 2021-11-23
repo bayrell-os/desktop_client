@@ -21,6 +21,24 @@ from PyQt5.QtCore import QSize, QUrl
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 main_window = None
+app_debug = False
+
+
+def set_window_center(window):
+	
+	desktop = QApplication.desktop()
+	screen_number = desktop.screenNumber(desktop.cursor().pos())
+	center = desktop.screenGeometry(screen_number).center()
+	
+	window_size = window.size()
+	width = window_size.width(); 
+	height = window_size.height();
+	
+	x = center.x() - width / 2;
+	y = center.y() - height / 2;
+	
+	window.move ( x, y );
+
 
 class Connection():
 	
@@ -37,6 +55,7 @@ class ConnectDialog(QDialog, Ui_ConnectDialog):
 	def __init__(self):
 		QDialog.__init__(self)
 		self.setupUi(self)
+		self.label.setWordWrap(True)
 	
 
 class EditConnectionDialog(QDialog, Ui_EditConnectionDialog):
@@ -58,6 +77,7 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		self.connect_dialog = None
 		self.ssh_server = None
 		self.thread_connect = None
+		self.is_connected = False
 		
 		self.setupUi(self)
 		self.setWindowTitle("Connect to server")
@@ -88,9 +108,6 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		self.homeButton.triggered.connect(self.onHomeButtonClick)
 		self.urlEdit.returnPressed.connect(self.onUrlEditChange)
 		self.webBrowser.urlChanged.connect(self.onWebBrowserUrlChange)
-		
-		# Maximize
-		self.showMaximized()
 	
 	
 	def closeEvent(self, event):
@@ -101,10 +118,13 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 	def sshConnect(self):
 		
 		try:
-			time.sleep(0.1)
+			time.sleep(1)
 			
 			if self.connect_data == None:
-				self.connect_dialog.label.setText("Error: Connection data is None")
+				s = "Error: Connection data is None"
+				self.connect_dialog.label.setText(s)
+				if app_debug:
+					print (s)
 				return
 			
 			# Connect to ssh server
@@ -116,6 +136,7 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 					ssh_port=data.port,
 					ssh_username=data.username,
 					ssh_password=data.password,
+					set_keepalive=60*60,
 					remote_bind_address=('127.0.0.1', 80)
 				)
 				self.ssh_server.start()
@@ -123,14 +144,21 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 				self.home_url = "http://127.0.0.1:" + str(self.ssh_server.local_bind_port) + "/"
 				
 			except Exception as e:
-				s = "Error: Failed to connect to {0}:{1}: {2}".format(data.host, data.port, e)
-				self.connect_dialog.label.setText(s)
+				s = "Error: Failed connect to {0}:{1}: {2}".format(data.host, data.port, e)
+				if self.connect_dialog != None:
+					self.connect_dialog.label.setText(s)
+				if app_debug:
+					print (s)
 				return
 			
 			
 			if self.connect_dialog != None:
 				self.connect_dialog.accept()
-				
+				if app_debug:
+					print ("Connected")
+			
+			self.is_connected = True
+			
 			pass
 		
 		except Exception as e:
@@ -146,12 +174,19 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		if self.ssh_server != None:
 			self.ssh_server.stop()
 			self.ssh_server = None
-	
+		
+		self.is_connected = False
+		
+		if app_debug:
+			print ("Disconnect")
 	
 	
 	def connectToServer(self, data:Connection):
 		
 		self.home_url = ""
+		
+		if app_debug:
+			print ("Connect to " + data.host)
 		
 		# Create connection dialog
 		self.connect_dialog = ConnectDialog()
@@ -169,15 +204,19 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		self.thread_connect.start()
 		
 		# Show connection dialog
-		result = self.connect_dialog.exec()
+		result = 0
+		if self.is_connected == False:
+			result = self.connect_dialog.exec()
+		
+		if app_debug:
+			print ("Result: ", result)
 		
 		# Cancel connect
 		if (result == 0):
 			self.sshDisconnect()
-			self.close()
 		
 		# Success connect
-		else:
+		if self.is_connected:
 			
 			if self.home_url != "":
 				webBrowser:QWebEngineView = self.webBrowser
@@ -185,6 +224,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 			
 			connect_title = "Connected to {0} ({1})".format(data.connection_name, data.host)
 			self.setWindowTitle(connect_title)
+			self.show()
+			set_window_center(self)
 		
 		self.connect_dialog = None
 		
@@ -233,7 +274,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.setWindowTitle("BAYRELL OS Desktop Client")
 		
 		# Set to center
-		self.set_window_center()
+		set_window_center(self)
 		
 		# Load items
 		self.loadItems()
@@ -279,35 +320,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			else:
 				item.setText(data.connection_name)
 				item.setData(1, data)
-	
-		
-	def set_window_center(self):
-		
-		desktop = QApplication.desktop()
-		screen_number = desktop.screenNumber(desktop.cursor().pos())
-		center = desktop.screenGeometry(screen_number).center()
-		
-		window_size = self.size()
-		width = window_size.width(); 
-		height = window_size.height();
-		
-		x = center.x() - width / 2;
-		y = center.y() - height / 2;
-		
-		self.move ( x, y );
 		
 		
-	def getConnectionsFileName(self):
+	def getSettingsFileName(self):
 		path = os.path.expanduser('~')
 		path = os.path.join(path, ".config", "bayrell_os")
 		os.makedirs(path, exist_ok=True)
-		file_name = os.path.join(path, "connections.json")
+		file_name = os.path.join(path, "settings.json")
 		return file_name
 	
 	
 	def loadItems(self):
 		
-		file_name = self.getConnectionsFileName()
+		file_name = self.getSettingsFileName()
 		file_content = ""
 		
 		try:
@@ -316,15 +341,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 					file_content = file.read()
 					file.close()
 				
-				objects = json.loads(file_content)
-				for obj in objects:
+				settings = json.loads(file_content)
+				connections = settings["connections"]
+				for connection in connections:
 					
 					data = Connection()
-					data.connection_name = obj["connection_name"]
-					data.host = obj["host"]
-					data.port = obj["port"]
-					data.username = obj["username"]
-					data.password = obj["password"]
+					data.connection_name = connection["connection_name"]
+					data.host = connection["host"]
+					data.port = connection["port"]
+					data.username = connection["username"]
+					data.password = connection["password"]
 					
 					item = QListWidgetItem(data.connection_name)
 					item.setData(1, data)
@@ -335,14 +361,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		
 		pass
 	
+	
 	def saveItems(self):
 		
-		objects = []
+		connections = []
 		for row in range(self.listWidget.count()):
 			item = self.listWidget.item(row)
 			
 			data = item.data(1)
-			obj = {
+			connection = {
 				"connection_name": data.connection_name,
 				"host": data.host,
 				"port": data.port,
@@ -350,11 +377,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 				"password": data.password,
 			}
 			
-			objects.append(obj)
+			connections.append(connection)
 		
-		text = json.dumps(objects, indent=2) 
+		settings = {
+			"connections": connections
+		}
 		
-		file_name = self.getConnectionsFileName()
+		text = json.dumps(settings, indent=2) 
+		
+		file_name = self.getSettingsFileName()
 		with open(file_name, "w") as file:
 			file.write(text)
 			file.close()
@@ -394,7 +425,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			data = item.data(1)
 			
 			web_browser = WebBrowser(self)
-			web_browser.show()
 			web_browser.connectToServer(data)
 		
 		pass

@@ -1,2 +1,7 @@
-# thin_desktop_client
-Thin desktop client
+# BAYRELL OS Desktop Client
+
+Install
+```
+pip3 install bayrell-os-desktop-client
+```
+
