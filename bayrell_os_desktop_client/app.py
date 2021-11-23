@@ -34,8 +34,8 @@ def set_window_center(window):
 	width = window_size.width(); 
 	height = window_size.height();
 	
-	x = center.x() - width / 2;
-	y = center.y() - height / 2;
+	x = center.x() - round(width / 2);
+	y = center.y() - round(height / 2);
 	
 	window.move ( x, y );
 

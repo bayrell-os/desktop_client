@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_WebBrowser(object):
     def setupUi(self, WebBrowser):
         WebBrowser.setObjectName("WebBrowser")
-        WebBrowser.resize(1000, 650)
+        WebBrowser.resize(1000, 600)
         self.centralwidget = QtWidgets.QWidget(WebBrowser)
         self.centralwidget.setObjectName("centralwidget")
         self.webBrowser = QtWebEngineWidgets.QWebEngineView(self.centralwidget)
