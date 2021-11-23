@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import sys, os, json
+import asyncio, sys, os, json, threading, time
 from os.path import abspath, dirname, join
+from threading import Timer
+from paramiko import SSHClient
+from sshtunnel import SSHTunnelForwarder
+
 from .MainWindow import Ui_MainWindow
-from .ConnectionDialog import Ui_ConnectionDialog
+from .ConnectDialog import Ui_ConnectDialog
+from .EditConnectionDialog import Ui_EditConnectionDialog
 from .WebBrowser import Ui_WebBrowser
 
 import PyQt5
@@ -17,7 +22,6 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 main_window = None
 
-
 class Connection():
 	
 	def __init__(self):
@@ -28,13 +32,31 @@ class Connection():
 		self.password = "";
 
 
+class ConnectDialog(QDialog, Ui_ConnectDialog):
+	
+	def __init__(self, web_browser):
+		QDialog.__init__(self)
+		self.setupUi(self)
+		self.setWindowTitle("Connect to server")
+		
+		self.status_connection = 0
+		self.web_browser = web_browser
+		
+		
+		
+		self.ssh_server = None
+	
+	
+			
+	
+	
 
-class ConnectionDialog(QDialog, Ui_ConnectionDialog):
+class EditConnectionDialog(QDialog, Ui_EditConnectionDialog):
 	
 	def __init__(self):
 		QDialog.__init__(self)
 		self.setupUi(self)
-		self.setWindowTitle("Connection")
+		self.setWindowTitle("Edit connection")
 
 
 
@@ -42,8 +64,15 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 	
 	def __init__(self, parent=None):
 		QMainWindow.__init__(self, parent)
+		
+		self.home_url = ""
+		self.connect_data = None
+		self.connect_dialog = None
+		self.ssh_server = None
+		self.thread_connect = None
+		
 		self.setupUi(self)
-		self.setWindowTitle("Connected to 172.30.0.20")
+		self.setWindowTitle("Connect to server")
 		self.setCentralWidget(self.webBrowser)
 		
 		# Tool Bar
@@ -72,12 +101,99 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		self.urlEdit.returnPressed.connect(self.onUrlEditChange)
 		self.webBrowser.urlChanged.connect(self.onWebBrowserUrlChange)
 		
-		webBrowser:QWebEngineView = self.webBrowser
-		webBrowser.setUrl( QUrl("http://172.30.0.20:8080/") )
-		
 		# Maximize
 		self.showMaximized()
-
+	
+	
+	def sshConnect(self):
+		
+		time.sleep(5)
+		
+		self.connect_dialog.accept()
+		return
+		
+		if self.connect_data == None:
+			self.connect_dialog.label.setText("Error: Connection data is None")
+			return
+		
+		# Connect to ssh server
+		data:Connection = self.connect_data
+		
+		try:
+			self.ssh_server = SSHTunnelForwarder(
+				data.host,
+				ssh_port=data.port,
+				ssh_username=data.username,
+				ssh_password=data.password,
+				remote_bind_address=('127.0.0.1', 80)
+			)
+			self.ssh_server.start()
+			self.setHomeUrl("http://127.0.0.1:" + str(self.ssh_server.local_bind_port))
+			
+		except Exception as e:
+			s = "Error: Failed to connect to %s:%d: %r".format(data.host, data.port, e)
+			self.connect_dialog.label.setText(s)
+			return
+		
+		if self.connect_dialog != None:
+			self.connect_dialog.accept()
+			
+		pass
+	
+	
+	def sshDisconnect(self):
+		
+		if self.thread_connect != None:
+			self.thread_connect.stop()
+			self.thread_connect = None
+		
+		if self.ssh_server != None:
+			self.ssh_server.stop()
+			self.ssh_server = None
+	
+	
+	
+	def connectToServer(self, data:Connection):
+		
+		print ("Connect to server")
+		
+		# Create connection dialog
+		self.connect_dialog = ConnectDialog(self)
+		
+		# Setup connection
+		self.connect_data = data
+		
+		# Connect to server
+		self.thread_connect = threading.Thread(target=self.sshConnect)
+		self.thread_connect.start()
+		
+		# Show connection dialog
+		result = self.connect_dialog.exec()
+		
+		# Cancel connect
+		if (result == 0):
+			#self.sshDisconnect()
+			self.close()
+			
+			print ("Cancel connect")
+		
+		# Success connect
+		else:
+			
+			print ("Success connect")
+			pass
+		
+		self.connect_dialog = None
+		
+		pass
+	
+	
+	def setHomeUrl(self, url):
+		self.home_url = url
+		
+		webBrowser:QWebEngineView = self.webBrowser
+		webBrowser.setUrl( QUrl(self.home_url) )
+		
 	
 	def onPrevButtonClick(self):
 		webBrowser:QWebEngineView = self.webBrowser
@@ -95,9 +211,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 	
 	
 	def onHomeButtonClick(self):
-		url = "http://172.30.0.20:8080/"
 		webBrowser:QWebEngineView = self.webBrowser
-		webBrowser.setUrl( QUrl(url) )
+		webBrowser.setUrl( QUrl(self.home_url) )
 	
 	
 	def onUrlEditChange(self):
@@ -137,7 +252,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 	
 	
 	def show_connection_dialog(self, item:QListWidgetItem = None):
-		dlg = ConnectionDialog()
+		dlg = EditConnectionDialog()
 		
 		if item != None:
 			data = item.data(1)
@@ -275,8 +390,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 	
 	
 	def onConnectClick(self):
-		web_browser = WebBrowser(self)
-		web_browser.show()
+		
+		items = self.listWidget.selectedIndexes()
+		if len(items) > 0:
+			row = items[0].row()
+			item = self.listWidget.item(row)
+			data = item.data(1)
+			
+			web_browser = WebBrowser(self)
+			web_browser.show()
+			web_browser.connectToServer(data)
 		
 		pass
 	

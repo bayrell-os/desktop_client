@@ -14,11 +14,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_WebBrowser(object):
     def setupUi(self, WebBrowser):
         WebBrowser.setObjectName("WebBrowser")
-        WebBrowser.resize(969, 621)
+        WebBrowser.resize(588, 318)
         self.centralwidget = QtWidgets.QWidget(WebBrowser)
         self.centralwidget.setObjectName("centralwidget")
         self.webBrowser = QtWebEngineWidgets.QWebEngineView(self.centralwidget)
-        self.webBrowser.setGeometry(QtCore.QRect(40, 120, 511, 221))
+        self.webBrowser.setGeometry(QtCore.QRect(10, 10, 561, 241))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -27,7 +27,7 @@ class Ui_WebBrowser(object):
         self.webBrowser.setObjectName("webBrowser")
         WebBrowser.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(WebBrowser)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 969, 29))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 588, 29))
         self.menubar.setObjectName("menubar")
         WebBrowser.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(WebBrowser)

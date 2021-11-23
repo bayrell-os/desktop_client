@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>969</width>
-    <height>621</height>
+    <width>588</width>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QWebEngineView" name="webBrowser" native="true">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>120</y>
-      <width>511</width>
-      <height>221</height>
+      <x>10</x>
+      <y>10</y>
+      <width>561</width>
+      <height>241</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -36,7 +36,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>969</width>
+     <width>588</width>
      <height>29</height>
     </rect>
    </property>
