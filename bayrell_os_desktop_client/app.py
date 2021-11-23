@@ -137,7 +137,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 					ssh_username=data.username,
 					ssh_password=data.password,
 					set_keepalive=60*60,
-					remote_bind_address=('127.0.0.1', 80)
+					remote_bind_address=('127.0.0.1', 80),
+					local_bind_address=('127.0.0.1', ),
 				)
 				self.ssh_server.start()
 				
@@ -272,6 +273,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		# Set a title
 		self.setupUi(self)
 		self.setWindowTitle("BAYRELL OS Desktop Client")
+		self.listWidget.setSortingEnabled(True)
 		
 		# Set to center
 		set_window_center(self)

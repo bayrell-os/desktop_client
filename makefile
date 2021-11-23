@@ -3,7 +3,7 @@ all:
 	@echo "make {linux|windows}"
 
 linux:
-	pyinstaller --onefile -n bayrell_os_desktop_client_1_0 ./run
+	pyinstaller --onefile -n bayrell_os_desktop_client_1_1 ./run
 	
 
 clean:
