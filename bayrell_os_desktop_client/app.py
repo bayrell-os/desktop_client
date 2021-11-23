@@ -9,7 +9,8 @@ from .WebBrowser import Ui_WebBrowser
 import PyQt5
 from PyQt5.QtWidgets import \
 	QApplication, QMainWindow, QSystemTrayIcon, QMenu, \
-	QAction, QWidget, QStyle, QDialog, QMessageBox, QListWidgetItem
+	QAction, QWidget, QStyle, QDialog, QMessageBox, \
+	QListWidgetItem, QToolBar, QLineEdit
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSize, QUrl
 from PyQt5.QtWebEngineWidgets import QWebEngineView
@@ -42,11 +43,73 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 	def __init__(self, parent=None):
 		QMainWindow.__init__(self, parent)
 		self.setupUi(self)
-		self.setWindowTitle("WebBrowser")
-		browser:QWebEngineView = self.browser
-		browser.setUrl( QUrl("https://google.com") )
+		self.setWindowTitle("Connected to 172.30.0.20")
+		self.setCentralWidget(self.webBrowser)
+		
+		# Tool Bar
+		self.toolBar = QToolBar()
+		self.addToolBar(self.toolBar)
+		
+		# Buttons
+		self.prevButton = QAction('Prev', self)
+		self.nextButton = QAction('Next', self)
+		self.refreshButton = QAction('Refresh', self)
+		self.homeButton = QAction('Home', self)
+		self.urlEdit = QLineEdit()
+		
+		# Add to toolbar
+		self.toolBar.addAction(self.prevButton)
+		self.toolBar.addAction(self.nextButton)
+		self.toolBar.addAction(self.refreshButton)
+		#self.toolBar.addAction(self.homeButton)
+		self.toolBar.addWidget(self.urlEdit)
+		
+		# Events
+		self.prevButton.triggered.connect(self.onPrevButtonClick)
+		self.nextButton.triggered.connect(self.onNextButtonClick)
+		self.refreshButton.triggered.connect(self.onRefreshButtonClick)
+		self.homeButton.triggered.connect(self.onHomeButtonClick)
+		self.urlEdit.returnPressed.connect(self.onUrlEditChange)
+		self.webBrowser.urlChanged.connect(self.onWebBrowserUrlChange)
+		
+		webBrowser:QWebEngineView = self.webBrowser
+		webBrowser.setUrl( QUrl("http://172.30.0.20:8080/") )
+		
+		# Maximize
+		self.showMaximized()
 
-
+	
+	def onPrevButtonClick(self):
+		webBrowser:QWebEngineView = self.webBrowser
+		webBrowser.back()
+	
+	
+	def onNextButtonClick(self):
+		webBrowser:QWebEngineView = self.webBrowser
+		webBrowser.forward()
+	
+	
+	def onRefreshButtonClick(self):
+		webBrowser:QWebEngineView = self.webBrowser
+		webBrowser.reload()
+	
+	
+	def onHomeButtonClick(self):
+		url = "http://172.30.0.20:8080/"
+		webBrowser:QWebEngineView = self.webBrowser
+		webBrowser.setUrl( QUrl(url) )
+	
+	
+	def onUrlEditChange(self):
+		url = self.urlEdit.text()
+		webBrowser:QWebEngineView = self.webBrowser
+		webBrowser.setUrl( QUrl(url) )
+	
+	
+	def onWebBrowserUrlChange(self, url):
+		self.urlEdit.setText(url.toString())
+		pass
+	
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 	
