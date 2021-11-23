@@ -34,21 +34,9 @@ class Connection():
 
 class ConnectDialog(QDialog, Ui_ConnectDialog):
 	
-	def __init__(self, web_browser):
+	def __init__(self):
 		QDialog.__init__(self)
 		self.setupUi(self)
-		self.setWindowTitle("Connect to server")
-		
-		self.status_connection = 0
-		self.web_browser = web_browser
-		
-		
-		
-		self.ssh_server = None
-	
-	
-			
-	
 	
 
 class EditConnectionDialog(QDialog, Ui_EditConnectionDialog):
@@ -105,46 +93,54 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		self.showMaximized()
 	
 	
+	def closeEvent(self, event):
+		self.sshDisconnect()
+		event.accept()
+	
+	
 	def sshConnect(self):
 		
-		time.sleep(5)
-		
-		self.connect_dialog.accept()
-		return
-		
-		if self.connect_data == None:
-			self.connect_dialog.label.setText("Error: Connection data is None")
-			return
-		
-		# Connect to ssh server
-		data:Connection = self.connect_data
-		
 		try:
-			self.ssh_server = SSHTunnelForwarder(
-				data.host,
-				ssh_port=data.port,
-				ssh_username=data.username,
-				ssh_password=data.password,
-				remote_bind_address=('127.0.0.1', 80)
-			)
-			self.ssh_server.start()
-			self.setHomeUrl("http://127.0.0.1:" + str(self.ssh_server.local_bind_port))
+			time.sleep(0.1)
 			
-		except Exception as e:
-			s = "Error: Failed to connect to %s:%d: %r".format(data.host, data.port, e)
-			self.connect_dialog.label.setText(s)
-			return
+			if self.connect_data == None:
+				self.connect_dialog.label.setText("Error: Connection data is None")
+				return
+			
+			# Connect to ssh server
+			data:Connection = self.connect_data
+			
+			try:
+				self.ssh_server = SSHTunnelForwarder(
+					data.host,
+					ssh_port=data.port,
+					ssh_username=data.username,
+					ssh_password=data.password,
+					remote_bind_address=('127.0.0.1', 80)
+				)
+				self.ssh_server.start()
+				
+				self.home_url = "http://127.0.0.1:" + str(self.ssh_server.local_bind_port) + "/"
+				
+			except Exception as e:
+				s = "Error: Failed to connect to {0}:{1}: {2}".format(data.host, data.port, e)
+				self.connect_dialog.label.setText(s)
+				return
+			
+			
+			if self.connect_dialog != None:
+				self.connect_dialog.accept()
+				
+			pass
 		
-		if self.connect_dialog != None:
-			self.connect_dialog.accept()
+		except Exception as e:
+			print (e)
 			
-		pass
-	
 	
 	def sshDisconnect(self):
 		
 		if self.thread_connect != None:
-			self.thread_connect.stop()
+			#self.thread_connect.stop()
 			self.thread_connect = None
 		
 		if self.ssh_server != None:
@@ -155,10 +151,15 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 	
 	def connectToServer(self, data:Connection):
 		
-		print ("Connect to server")
+		self.home_url = ""
 		
 		# Create connection dialog
-		self.connect_dialog = ConnectDialog(self)
+		self.connect_dialog = ConnectDialog()
+		
+		# Setup title
+		connect_title = "Connect to {0} ({1})".format(data.connection_name, data.host)
+		self.connect_dialog.setWindowTitle(connect_title)
+		self.setWindowTitle(connect_title)
 		
 		# Setup connection
 		self.connect_data = data
@@ -172,27 +173,22 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		
 		# Cancel connect
 		if (result == 0):
-			#self.sshDisconnect()
+			self.sshDisconnect()
 			self.close()
-			
-			print ("Cancel connect")
 		
 		# Success connect
 		else:
 			
-			print ("Success connect")
-			pass
+			if self.home_url != "":
+				webBrowser:QWebEngineView = self.webBrowser
+				webBrowser.setUrl( QUrl(self.home_url) )
+			
+			connect_title = "Connected to {0} ({1})".format(data.connection_name, data.host)
+			self.setWindowTitle(connect_title)
 		
 		self.connect_dialog = None
 		
 		pass
-	
-	
-	def setHomeUrl(self, url):
-		self.home_url = url
-		
-		webBrowser:QWebEngineView = self.webBrowser
-		webBrowser.setUrl( QUrl(self.home_url) )
 		
 	
 	def onPrevButtonClick(self):
