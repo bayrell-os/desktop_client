@@ -6,6 +6,7 @@ from threading import Timer
 from paramiko import SSHClient
 from sshtunnel import SSHTunnelForwarder
 
+from .AboutDialog import Ui_AboutDialog
 from .MainWindow import Ui_MainWindow
 from .ConnectDialog import Ui_ConnectDialog
 from .EditConnectionDialog import Ui_EditConnectionDialog
@@ -50,12 +51,21 @@ class Connection():
 		self.password = "";
 
 
+class AboutDialog(QDialog, Ui_AboutDialog):
+	
+	def __init__(self):
+		QDialog.__init__(self)
+		self.setupUi(self)
+		self.setFixedSize(self.size())
+	
+
 class ConnectDialog(QDialog, Ui_ConnectDialog):
 	
 	def __init__(self):
 		QDialog.__init__(self)
 		self.setupUi(self)
 		self.label.setWordWrap(True)
+		self.setFixedSize(self.size())
 	
 
 class EditConnectionDialog(QDialog, Ui_EditConnectionDialog):
@@ -64,7 +74,7 @@ class EditConnectionDialog(QDialog, Ui_EditConnectionDialog):
 		QDialog.__init__(self)
 		self.setupUi(self)
 		self.setWindowTitle("Edit connection")
-
+		self.setFixedSize(self.size())
 
 
 class WebBrowser(QMainWindow, Ui_WebBrowser):
@@ -276,21 +286,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.listWidget.setSortingEnabled(True)
 		
 		# Set to center
+		self.setFixedSize(self.size())
 		set_window_center(self)
 		
 		# Load items
 		self.loadItems()
 		
-		# Add action
+		# Button action
+		self.aboutButton.clicked.connect(self.onAboutClick)
 		self.addButton.clicked.connect(self.onAddClick)
 		self.editButton.clicked.connect(self.onEditClick)
 		self.deleteButton.clicked.connect(self.onDeleteClick)
 		self.connectButton.clicked.connect(self.onConnectClick)
+		#self.exitButton.clicked.connect(self.onExitClick)
 		
 		pass
 	
 	
-	def show_connection_dialog(self, item:QListWidgetItem = None):
+	def show_edit_connection_dialog(self, item:QListWidgetItem = None):
 		dlg = EditConnectionDialog()
 		
 		if item != None:
@@ -395,8 +408,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		pass
 	
 	
+	def onAboutClick(self):
+		dlg = AboutDialog()
+		result = dlg.exec()
+	
+	
 	def onAddClick(self):
-		self.show_connection_dialog()
+		self.show_edit_connection_dialog()
 		self.saveItems()
 	
 	
@@ -404,18 +422,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		
 		items = self.listWidget.selectedIndexes()
 		if len(items) > 0:
-			self.show_connection_dialog( self.listWidget.item(items[0].row()) )
+			self.show_edit_connection_dialog( self.listWidget.item(items[0].row()) )
 			
 		self.saveItems()
 	
 	
 	def onDeleteClick(self):
-		items = self.listWidget.selectedIndexes()
-		for item in items:
-			row = item.row()
-			self.listWidget.takeItem(row)
 		
-		self.saveItems()
+		delete_msg = "Are you sure want to delete selected items?"
+		result = QMessageBox.question(self, "Delete selected items",
+				delete_msg, QMessageBox.Yes, QMessageBox.No)
+		
+		if result == QMessageBox.Yes:
+			items = self.listWidget.selectedIndexes()
+			for item in items:
+				row = item.row()
+				self.listWidget.takeItem(row)
+			
+			self.saveItems()
 	
 	
 	def onConnectClick(self):
@@ -432,9 +456,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		pass
 	
 	
+	def onExitClick(self):
+		
+		quit_msg = "Are you sure want to exit from the app?"
+		result = QMessageBox.question(self, "Exit from the app",
+				quit_msg, QMessageBox.Yes, QMessageBox.No)
+		
+		if result == QMessageBox.Yes:
+			self.close()
+	
+	
 def run():
 	app = QApplication(sys.argv)
 	main_window = MainWindow()
 	main_window.show()
 	sys.exit(app.exec())
-

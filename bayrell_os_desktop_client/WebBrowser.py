@@ -30,9 +30,6 @@ class Ui_WebBrowser(object):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1000, 29))
         self.menubar.setObjectName("menubar")
         WebBrowser.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(WebBrowser)
-        self.statusbar.setObjectName("statusbar")
-        WebBrowser.setStatusBar(self.statusbar)
 
         self.retranslateUi(WebBrowser)
         QtCore.QMetaObject.connectSlotsByName(WebBrowser)
