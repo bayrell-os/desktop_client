@@ -8,8 +8,8 @@
 python3 setup.py sdist bdist_wheel - Сборка пакета
 sudo python3 setup.py develop - Установка пакета для разработки
 sudo python3 setup.py develop -u - Uninstall
-sudo pip3 install dist/bayrell_os_desktop_client-1.2.0.tar.gz - Установка пакета
-sudo pip3 uninstall bayrell_os_desktop_client - Удаление пакета
+sudo pip3 install dist/cloud_os_desktop-1.2.0.tar.gz - Установка пакета
+sudo pip3 uninstall cloud_os_desktop - Удаление пакета
 python3 -m twine upload --repository pypi dist/* - Залить на сервер
 twine upload -r pypi dist/* - Новая команда залить в pypi
 
@@ -22,8 +22,8 @@ from setuptools import setup, find_packages
 from os.path import abspath, dirname, join
 
 setup(
-	name="bayrell_os_desktop_client",
-	version="1.2.0",
+	name="cloud_os_desktop",
+	version="1.2.1",
 	description="Bayrell OS Desktop Client",
 	long_description=open(join(abspath(dirname(__file__)), 'README.md'), encoding='utf-8').read(),
 	long_description_content_type='text/markdown',
@@ -34,7 +34,7 @@ setup(
 	packages=find_packages(),
 	include_package_data = True,
 	scripts=[
-		'scripts/bayrell_os_desktop_client'
+		'scripts/cloud_os_desktop'
 	],
 	install_requires=[
 		'PyQt5',

@@ -182,11 +182,14 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 			#self.thread_connect.stop()
 			self.thread_connect = None
 		
-		if self.ssh_server != None:
-			self.ssh_server.stop()
-			self.ssh_server = None
-		
+		try:
+			if self.ssh_server != None:
+				self.ssh_server.stop()
+		except Exception as e:
+			print (e)
+			
 		self.is_connected = False
+		self.ssh_server = None
 		
 		if app_debug:
 			print ("Disconnect")
