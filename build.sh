@@ -3,7 +3,7 @@
 SCRIPT=$(readlink -f $0)
 SCRIPT_PATH=`dirname $SCRIPT`
 BASE_PATH=`dirname $SCRIPT_PATH`
-version="1.2.1"
+version="0.4.2.post1"
 
 case "$1" in
 	
