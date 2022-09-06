@@ -3,7 +3,7 @@
 SCRIPT=$(readlink -f $0)
 SCRIPT_PATH=`dirname $SCRIPT`
 BASE_PATH=`dirname $SCRIPT_PATH`
-
+version="1.2.1"
 
 case "$1" in
 	
@@ -36,7 +36,7 @@ case "$1" in
 	
 	compile)
 		. env/bin/activate
-		pyinstaller --onefile -n cloud_os_desktop_1_2 ./run
+		pyinstaller --onefile -n cloud_os_desktop_$version ./run
 	;;
 	
 	build)
@@ -45,11 +45,15 @@ case "$1" in
 	;;
 	
 	install)
-		pip3.8 install dist/cloud_os_desktop-1.2.0.tar.gz
+		. env/bin/activate
+		python3.8 setup.py sdist bdist_wheel
+		echo "Install. Need root password"
+		sudo pip3.8 install dist/cloud_os_desktop-$version.tar.gz
 	;;
 	
 	uninstall)
-		pip3.8 uninstall cloud_os_desktop
+		echo "Uninstall. Need root password"
+		sudo pip3.8 uninstall cloud_os_desktop
 	;;
 	
 	install-dev)

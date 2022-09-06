@@ -41,6 +41,7 @@ setup(
 		'PyQtWebEngine',
 		'paramiko',
 		'sshtunnel',
+		'PyNaCl',
 	],
 	classifiers=[
 		'Environment :: X11 Applications :: Qt',
@@ -49,6 +50,7 @@ setup(
 		'Operating System :: Microsoft :: Windows :: Windows 10',
 		'Programming Language :: Python',
 		'Programming Language :: Python :: 3',
+		'Programming Language :: Python :: 3.8',
 		'Topic :: Internet',
 		'Topic :: System :: Operating System',
 		'Topic :: Utilities',

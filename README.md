@@ -1,11 +1,11 @@
-# BAYRELL OS Desktop Client
+# BAYRELL Cloud OS Desktop Client
 
 Install
 ```
-pip3 install bayrell-os-desktop-client
+sudo pip3.8 install cloud-os-desktop
 ```
 
 Run in command line:
 ```
-bayrell_os_desktop_client
+cloud_os_desktop
 ```

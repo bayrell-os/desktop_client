@@ -232,9 +232,14 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		# Success connect
 		if self.is_connected:
 			
+			data:Connection = self.connect_data
+			
 			if self.home_url != "":
 				webBrowser:QWebEngineView = self.webBrowser
-				webBrowser.setUrl( QUrl(self.home_url) )
+				url = QUrl(self.home_url)
+				url.setUserName(data.username)
+				url.setPassword(data.password)
+				webBrowser.setUrl( url )
 			
 			connect_title = "Connected to {0} ({1})".format(data.connection_name, data.host)
 			self.setWindowTitle(connect_title)
@@ -273,8 +278,10 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 	
 	
 	def onWebBrowserUrlChange(self, url):
-		self.urlEdit.setText(url.toString())
-		pass
+		from urllib.parse import urlparse
+		res = urlparse(url.toString())
+		url_new = res.scheme + "://"  + res.hostname + ":" + str(res.port) + res.path
+		self.urlEdit.setText(url_new)
 	
 
 class MainWindow(QMainWindow, Ui_MainWindow):
