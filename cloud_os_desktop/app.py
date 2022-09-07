@@ -22,7 +22,7 @@ from PyQt5.QtCore import QSize, QUrl
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 main_window = None
-app_debug = False
+app_debug = True
 
 
 def set_window_center(window):
@@ -165,13 +165,12 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 					print (s)
 				return
 			
+			self.is_connected = True
 			
 			if self.connect_dialog != None:
 				self.connect_dialog.accept()
 				if app_debug:
 					print ("Connected")
-			
-			self.is_connected = True
 			
 			pass
 		
@@ -229,11 +228,17 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 			print ("Result: ", result)
 		
 		# Cancel connect
-		if (result == 0):
+		if result == 0:
 			self.sshDisconnect()
+		else:
+			if self.is_connected == False:
+				self.sshDisconnect()
 		
 		# Success connect
 		if self.is_connected:
+			
+			if app_debug:
+				print ("Open web browser")
 			
 			data:Connection = self.connect_data
 			
