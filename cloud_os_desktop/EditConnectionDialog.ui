@@ -111,7 +111,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Port</string>
+    <string>Local port</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="portEdit">
@@ -122,6 +122,9 @@
      <width>381</width>
      <height>31</height>
     </rect>
+   </property>
+   <property name="text">
+    <string>8080</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_5">

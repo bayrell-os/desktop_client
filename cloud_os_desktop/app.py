@@ -46,7 +46,7 @@ class Connection():
 	def __init__(self):
 		self.connection_name = "";
 		self.host = "";
-		self.port = "";
+		self.local_port = "";
 		self.username = "";
 		self.password = "";
 
@@ -139,23 +139,26 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 			
 			# Connect to ssh server
 			data:Connection = self.connect_data
+			data_url_arr = data.host.split(":")
+			data_host = data_url_arr[0]
+			data_port = data_url_arr[1] if len(data_url_arr) > 1 else "8022"
 			
 			try:
 				self.ssh_server = SSHTunnelForwarder(
-					data.host,
-					ssh_port=data.port,
+					data_host,
+					ssh_port=int(data_port),
 					ssh_username=data.username,
 					ssh_password=data.password,
 					set_keepalive=60*60,
 					remote_bind_address=('127.0.0.1', 80),
-					local_bind_address=('127.0.0.1', ),
+					local_bind_address=('127.0.0.1', int(data.local_port)),
 				)
 				self.ssh_server.start()
 				
 				self.home_url = "http://127.0.0.1:" + str(self.ssh_server.local_bind_port) + "/"
 				
 			except Exception as e:
-				s = "Error: Failed connect to {0}:{1}: {2}".format(data.host, data.port, e)
+				s = "Error: Failed connect to {0}:{1}: {2}".format(data_host, data_port, e)
 				if self.connect_dialog != None:
 					self.connect_dialog.label.setText(s)
 				if app_debug:
@@ -320,7 +323,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			data = item.data(1)
 			dlg.connectionNameEdit.setText( data.connection_name )
 			dlg.hostEdit.setText( data.host )
-			dlg.portEdit.setText( data.port )
+			dlg.portEdit.setText( data.local_port )
 			dlg.usernameEdit.setText( data.username )
 			dlg.passwordEdit.setText( data.password )
 		
@@ -332,7 +335,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			data = Connection()
 			data.connection_name = dlg.connectionNameEdit.text()
 			data.host = dlg.hostEdit.text()
-			data.port = dlg.portEdit.text()
+			data.local_port = dlg.portEdit.text()
 			data.username = dlg.usernameEdit.text()
 			data.password = dlg.passwordEdit.text()
 			
@@ -371,11 +374,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 				for connection in connections:
 					
 					data = Connection()
-					data.connection_name = connection["connection_name"]
-					data.host = connection["host"]
-					data.port = connection["port"]
-					data.username = connection["username"]
-					data.password = connection["password"]
+					data.connection_name = connection["connection_name"] \
+						if "connection_name" in connection else ""
+					data.host = connection["host"] \
+						if "host" in connection else ""
+					data.username = connection["username"] \
+						if "username" in connection else ""
+					data.password = connection["password"] \
+						if "password" in connection else ""
+					data.local_port = connection["local_port"] \
+						if "local_port" in connection else "8080"
 					
 					item = QListWidgetItem(data.connection_name)
 					item.setData(1, data)
@@ -397,7 +405,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			connection = {
 				"connection_name": data.connection_name,
 				"host": data.host,
-				"port": data.port,
+				"local_port": data.local_port,
 				"username": data.username,
 				"password": data.password,
 			}

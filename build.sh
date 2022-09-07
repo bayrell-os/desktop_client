@@ -65,6 +65,7 @@ case "$1" in
 	;;
 	
 	upload)
+		twine check dist/*
 		twine upload -r pypi dist/*
 	;;
 	
@@ -72,8 +73,18 @@ case "$1" in
 		rm -rf dist/*
 	;;
 	
+	ui)
+		pushd cloud_os_desktop
+		pyuic5 AboutDialog.ui -o AboutDialog.py
+		pyuic5 MainWindow.ui -o MainWindow.py
+		pyuic5 ConnectDialog.ui -o ConnectDialog.py
+		pyuic5 EditConnectionDialog.ui -o EditConnectionDialog.py
+		pyuic5 WebBrowser.ui -o WebBrowser.py
+		popd
+	;;
+	
 	*)
-		echo "Usage: $0 {compile|build|clean|install|install-dev|uninstall|uninstall-dev|upload|create-env|pip-freeze|pip-install-online|pip-install-offline|pip-save}"
+		echo "Usage: $0 {compile|ui|build|clean|install|install-dev|uninstall|uninstall-dev|upload|create-env|pip-freeze|pip-install-online|pip-install-offline|pip-save}"
 		RETVAL=1
 
 esac
