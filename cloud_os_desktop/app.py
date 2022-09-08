@@ -271,21 +271,35 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 	
 	def onRefreshButtonClick(self):
 		webBrowser:QWebEngineView = self.webBrowser
-		webBrowser.reload()
+		#webBrowser.reload()
+		data:Connection = self.connect_data
+		url = webBrowser.url()
+		url.setUserName(data.username)
+		url.setPassword(data.password)
+		webBrowser.setUrl( url )
 	
 	
 	def onHomeButtonClick(self):
 		webBrowser:QWebEngineView = self.webBrowser
-		webBrowser.setUrl( QUrl(self.home_url) )
+		data:Connection = self.connect_data
+		url = QUrl(self.home_url)
+		url.setUserName(data.username)
+		url.setPassword(data.password)
+		webBrowser.setUrl( url )
 	
 	
 	def onUrlEditChange(self):
 		url = self.urlEdit.text()
 		webBrowser:QWebEngineView = self.webBrowser
-		webBrowser.setUrl( QUrl(url) )
+		data:Connection = self.connect_data
+		url = QUrl(url)
+		url.setUserName(data.username)
+		url.setPassword(data.password)
+		webBrowser.setUrl( url )
 	
 	
 	def onWebBrowserUrlChange(self, url):
+		#print( url )
 		from urllib.parse import urlparse
 		res = urlparse(url.toString())
 		url_new = res.scheme + "://"  + res.hostname + ":" + str(res.port) + res.path

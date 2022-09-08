@@ -3,7 +3,7 @@
 SCRIPT=$(readlink -f $0)
 SCRIPT_PATH=`dirname $SCRIPT`
 BASE_PATH=`dirname $SCRIPT_PATH`
-version="0.4.2.post1"
+version="0.4.2.post2"
 
 case "$1" in
 	
@@ -84,7 +84,7 @@ case "$1" in
 	;;
 	
 	*)
-		echo "Usage: $0 {compile|ui|build|clean|install|install-dev|uninstall|uninstall-dev|upload|create-env|pip-freeze|pip-install-online|pip-install-offline|pip-save}"
+		echo "Usage: $0 {build|compile|ui|clean|install|install-dev|uninstall|uninstall-dev|upload|create-env|pip-freeze|pip-install-online|pip-install-offline|pip-save}"
 		RETVAL=1
 
 esac
