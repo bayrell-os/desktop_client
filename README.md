@@ -2,7 +2,7 @@
 
 Install
 ```
-sudo pip3.8 install cloud-os-desktop
+sudo pip3.8 install --upgrade cloud-os-desktop
 ```
 
 Run in command line:
