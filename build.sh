@@ -3,7 +3,7 @@
 SCRIPT=$(readlink -f $0)
 SCRIPT_PATH=`dirname $SCRIPT`
 BASE_PATH=`dirname $SCRIPT_PATH`
-version="0.4.2.post2"
+version="0.4.2.post3"
 
 case "$1" in
 	
@@ -65,8 +65,10 @@ case "$1" in
 	;;
 	
 	upload)
-		twine check dist/*
-		twine upload -r pypi dist/*
+		twine check dist/cloud_os_desktop-$version.tar.gz
+		twine check dist/cloud_os_desktop-$version-py3-none-any.whl
+		twine upload -r pypi dist/cloud_os_desktop-$version.tar.gz
+		twine upload -r pypi dist/cloud_os_desktop-$version-py3-none-any.whl
 	;;
 	
 	clean)

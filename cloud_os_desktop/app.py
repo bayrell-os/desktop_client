@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import asyncio, sys, os, json, threading, time
+import asyncio, sys, os, json, threading, time, base64
 from os.path import abspath, dirname, join
 from threading import Timer
 from paramiko import SSHClient
@@ -19,7 +19,9 @@ from PyQt5.QtWidgets import \
 	QListWidgetItem, QToolBar, QLineEdit
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSize, QUrl
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor, \
+	QWebEngineUrlRequestInfo
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
 
 main_window = None
 app_debug = True
@@ -77,6 +79,21 @@ class EditConnectionDialog(QDialog, Ui_EditConnectionDialog):
 		self.setFixedSize(self.size())
 
 
+class UrlRequestInterceptor(QWebEngineUrlRequestInterceptor):
+	
+	def __init__(self):
+		QWebEngineUrlRequestInterceptor.__init__(self)
+		self.connection = None
+		
+	def interceptRequest(self, info: QWebEngineUrlRequestInfo) -> None:
+		
+		if self.connection:
+			s = str(self.connection.username) + ":" + str(self.connection.password)
+			s = ("Basic " + base64.b64encode(s.encode()).decode()).encode()
+			info.setHttpHeader("Authorization".encode(), s)
+			pass
+
+
 class WebBrowser(QMainWindow, Ui_WebBrowser):
 	
 	def __init__(self, parent=None):
@@ -118,7 +135,14 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		self.homeButton.triggered.connect(self.onHomeButtonClick)
 		self.urlEdit.returnPressed.connect(self.onUrlEditChange)
 		self.webBrowser.urlChanged.connect(self.onWebBrowserUrlChange)
-	
+		
+		# Setup web Browser
+		self.interceptor = UrlRequestInterceptor()
+		self.profile = QWebEngineProfile()
+		self.profile.setRequestInterceptor(self.interceptor)
+		self.page = QWebEnginePage(self.profile, self.webBrowser)
+		self.webBrowser.setPage( self.page )
+		
 	
 	def closeEvent(self, event):
 		self.sshDisconnect()
@@ -142,6 +166,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 			data_url_arr = data.host.split(":")
 			data_host = data_url_arr[0]
 			data_port = data_url_arr[1] if len(data_url_arr) > 1 else "8022"
+			
+			self.interceptor.connection = data
 			
 			try:
 				self.ssh_server = SSHTunnelForwarder(
@@ -245,8 +271,6 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 			if self.home_url != "":
 				webBrowser:QWebEngineView = self.webBrowser
 				url = QUrl(self.home_url)
-				url.setUserName(data.username)
-				url.setPassword(data.password)
 				webBrowser.setUrl( url )
 			
 			connect_title = "Connected to {0} ({1})".format(data.connection_name, data.host)
@@ -274,8 +298,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		#webBrowser.reload()
 		data:Connection = self.connect_data
 		url = webBrowser.url()
-		url.setUserName(data.username)
-		url.setPassword(data.password)
+		#url.setUserName(data.username)
+		#url.setPassword(data.password)
 		webBrowser.setUrl( url )
 	
 	
@@ -283,8 +307,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		webBrowser:QWebEngineView = self.webBrowser
 		data:Connection = self.connect_data
 		url = QUrl(self.home_url)
-		url.setUserName(data.username)
-		url.setPassword(data.password)
+		#url.setUserName(data.username)
+		#url.setPassword(data.password)
 		webBrowser.setUrl( url )
 	
 	
@@ -293,8 +317,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		webBrowser:QWebEngineView = self.webBrowser
 		data:Connection = self.connect_data
 		url = QUrl(url)
-		url.setUserName(data.username)
-		url.setPassword(data.password)
+		#url.setUserName(data.username)
+		#url.setPassword(data.password)
 		webBrowser.setUrl( url )
 	
 	
@@ -302,7 +326,8 @@ class WebBrowser(QMainWindow, Ui_WebBrowser):
 		#print( url )
 		from urllib.parse import urlparse
 		res = urlparse(url.toString())
-		url_new = res.scheme + "://"  + res.hostname + ":" + str(res.port) + res.path
+		url_new = str(res.scheme) + "://"  + str(res.hostname) + \
+			":" + str(res.port) + str(res.path)
 		self.urlEdit.setText(url_new)
 	
 
@@ -504,6 +529,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 	
 	
 def run():
+	
+	import os
+	
+	if os.name == 'nt':
+		os.environ["QTWEBENGINE_DISABLE_SANDBOX"] = str(1)
+		os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--no-sandbox"
+	
 	app = QApplication(sys.argv)
 	main_window = MainWindow()
 	main_window.show()

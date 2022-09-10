@@ -23,7 +23,7 @@ from os.path import abspath, dirname, join
 
 setup(
 	name="cloud_os_desktop",
-	version="0.4.2-2",
+	version="0.4.2-3",
 	description="Bayrell OS Desktop Client",
 	long_description=open(join(abspath(dirname(__file__)), 'README.md'), encoding='utf-8').read(),
 	long_description_content_type='text/markdown',
